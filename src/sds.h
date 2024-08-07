@@ -44,6 +44,15 @@ typedef char *sds;
 
 /* Note: sdshdr5 is never used, we just access the flags byte directly.
  * However is here to document the layout of type 5 SDS strings. */
+/**
+ * 这里定义了5种不同的结构体，分别是sdshdr5、sdshdr8、sdshdr16、sdshdr32、sdshdr64 可以根据实际情况选择使用节省内存
+ * </br>
+ * 使用 __attribute__ ((__packed__)) 声明结构体，取消4字节对齐，主要有两个好处：
+ * 1. 减少内存占用，节省内存空间 2. 方便动态更改结构体大小，方便使用
+ * </br>
+ * len: 表示已使用的长度，alloc: 表示分配的长度，flags: 一个字节，低3位表示类型，高5位不使用(sdshdr5之外，sdshdr5的5个最高有效位用来表示长度)
+ * buf: 实际存储sds字符串的数组
+ */
 struct __attribute__ ((__packed__)) sdshdr5 {
     unsigned char flags; /* 3 lsb of type, and 5 msb of string length */
     char buf[];
@@ -73,6 +82,16 @@ struct __attribute__ ((__packed__)) sdshdr64 {
     char buf[];
 };
 
+/**
+ * 这里定义5种结构体的位表示 并可以方便的与SDS_TYPE_MASK进行与运算获取类型
+ * <ul>
+ * <li> SDS_TYPE_5: 000</li>
+ * <li> SDS_TYPE_8: 001</li>
+ * <li>SDS_TYPE_16: 010</li>
+ * <li>SDS_TYPE_32: 011</li>
+ * <li>SDS_TYPE_64: 100</li>
+ * </ul>
+ */
 #define SDS_TYPE_5  0
 #define SDS_TYPE_8  1
 #define SDS_TYPE_16 2
@@ -80,6 +99,8 @@ struct __attribute__ ((__packed__)) sdshdr64 {
 #define SDS_TYPE_64 4
 #define SDS_TYPE_MASK 7
 #define SDS_TYPE_BITS 3
+
+
 #define SDS_HDR_VAR(T,s) struct sdshdr##T *sh = (void*)((s)-(sizeof(struct sdshdr##T)));
 #define SDS_HDR(T,s) ((struct sdshdr##T *)((s)-(sizeof(struct sdshdr##T))))
 #define SDS_TYPE_5_LEN(f) ((f)>>SDS_TYPE_BITS)
